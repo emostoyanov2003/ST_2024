@@ -3,19 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin panel | Начало</title>
-    <link rel="stylesheet" href="../../Style.css">
+    <title>Admin panel | Добавяне на резервация</title>
     <link rel="stylesheet" href="../Style_admin.css">
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="http://www.w3schools.com/w3css/4/w3.css">
     <link rel="icon" href="../admin_images/logo.png">
-    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
-    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>   
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&family=Jost:wght@200;300&family=M+PLUS+1p:wght@100&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
+    <script src='http://kit.fontawesome.com/a076d05399.js'></script>        
+    <link rel="preconnect" href="http://fonts.googleapis.com">
+    <link rel="preconnect" href="http://fonts.gstatic.com" crossorigin>
+    <link href="http://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap" rel="stylesheet">
+    <link href="http://fonts.googleapis.com/css2?family=Comfortaa:wght@500&family=Jost:wght@200;300&family=M+PLUS+1p:wght@100&family=Sawarabi+Gothic&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script>
         function CloseAllDropdowns() {
             input_dropdawns = document.getElementsByClassName("input_dropdawn");
@@ -30,16 +28,29 @@
         include "../connection.php";
         include "../admin_menu.php";
     ?>
-    <script>
-        document.getElementById("home_page").style.borderLeft = "2px solid #5F8CC3";
-    </script>
     <div class="admin_page_container">
-        <p class="admin_page_label">Търсене на свободна стая</p>
+        <p class="admin_page_label">Добавяне на резервация</p>
         <?php
             error_reporting(1);
+            $room_id = $_GET["room_id"];
+            $sqlSelectRow= "SELECT * FROM `rooms` WHERE MD5(`id`) = '$room_id'";
+            $resultSelectRow = $conn -> query($sqlSelectRow);
+            if (mysqli_num_rows($resultSelectRow) == 0){
+                echo "
+                    <script>
+                        window.location.assign('../error_page/');
+                    </script>
+                ";
+            }
+            $rowSelectRow = $resultSelectRow -> fetch_assoc();
+            $room_number = $rowSelectRow['room_number'];
+            $room_name = $rowSelectRow['room_name'];
+            $block = $rowSelectRow['block'];
             echo '
                 <form method="post" enctype="multipart/form-data">
-                    <label for="date_time" class="universal_label">Резервиране на стая за:</label>
+                    <input type="text" name="event_name" id="event_name" class="universal_input" placeholder="Какво ще се провжда?" autocomplete="off" min="8">
+                    <p id="err_p1" class="err_p"></p>
+                    <label for="date_time" class="universal_label">Резервиране на ' . $room_number . ' ' . $room_name . ' в блок ' . $block . ' за:</label>
                     <div class="radio-button-container">
                         <div class="radio-button">
                             <input type="radio" class="radio-button_input" id="date_specific" name="date_time" onclick="showDateSpecificInput()">
@@ -252,9 +263,11 @@
                     </script>
                     <p id="err_p3" class="err_p"></p>
                     <p id="err_p4" class="err_p"></p>
-                    <input type="submit" name="submit" class="universal_submit_btn" value="Намери свободна стая">
+                    <input type="submit" name="submit" class="universal_submit_btn" value="Добави резервация">
                 </form>
             ';
+            $owner_id = $_COOKIE["admin_panel_user_id"];
+            $event_name = preg_replace('/[^A-Za-zА-Яа-я0-9\-] ./u', '', $_POST["event_name"]); // Removes special chars.
             $start_date = $_POST["start_date"];
             $end_date = $_POST["end_date"];
             $date = $_POST["date"];
@@ -270,10 +283,10 @@
             if($date > $current_date || $start_date > $current_date && $end_date >= $start_date){
                 $dateCheck = true;
             }
-            if(isset($_POST["submit"]) && $dateCheck == true &&  $start_date != "" &&  $end_date != "" && $start_hour != "" && $end_hour != "" && $day != "" ||
-               isset($_POST["submit"]) && $dateCheck == true &&  $date != "" && $start_hour != "" && $end_hour != "" ||
-               isset($_POST["submit"]) && $dateCheck == true &&  $start_date != "" &&  $end_date != "" && $hour_specific != "" && $day != "" ||
-               isset($_POST["submit"]) && $dateCheck == true &&  $date != "" && $hour_specific != ""){
+            if(isset($_POST["submit"]) && $dateCheck == true && $event_name != "" &&  $start_date != "" &&  $end_date != "" && $start_hour != "" && $end_hour != "" && $day != "" ||
+               isset($_POST["submit"]) && $dateCheck == true && $event_name != "" &&  $date != "" && $start_hour != "" && $end_hour != "" ||
+               isset($_POST["submit"]) && $dateCheck == true && $event_name != "" &&  $start_date != "" &&  $end_date != "" && $hour_specific != "" && $day != "" ||
+               isset($_POST["submit"]) && $dateCheck == true && $event_name != "" &&  $date != "" && $hour_specific != ""){
                 if($date != ""){
                     $start_date = $date;
                     $end_date = $date;
@@ -282,13 +295,135 @@
                     $start_hour = $hour_specific;
                     $end_hour = $hour_specific;
                 }
-                echo "
-                    <script>
-                        window.location.assign('../rooms/?search_type=free rooms&start_date=" . $start_date . "&end_date=" . $end_date . "&start_hour=" . $start_hour . "&end_hour=" . $end_hour . "&day=" . $day . "');
-                    </script>
-                ";
+                $change_location = true;
+                $start = new DateTime($start_date);
+                $end = new DateTime($end_date);
+                // otherwise the  end date is excluded (bug?)
+                $end->modify('+1 day');
+
+                $interval = $end->diff($start);
+
+                // total days
+                $days = $interval->days;
+
+                // create an iterateable period of date (P1D equates to 1 day)
+                $period = new DatePeriod($start, new DateInterval('P1D'), $end);
+
+                // best stored as array, so you can add more than one
+                $holidays[] = null;
+                $sqlSelectHolidays = "SELECT * FROM `holidays`";
+                $resultSelectHolidays = $conn -> query($sqlSelectHolidays);
+                while($rowSelectHolidays = $resultSelectHolidays->fetch_assoc())
+                {
+                    $holidays[] = $rowSelectHolidays["date"];
+                }
+
+                foreach($period as $dt) {
+                    $curr = $dt->format('D');
+                    if (in_array($dt->format('Y-m-d'), $holidays) == false && $curr != 'Sat' && $curr != 'Sun') {
+                        $shedule_base = 0;
+                        if($curr == "Tue"){
+                            $shedule_base += 14;
+                        }
+                        else if($curr == "Wed"){
+                            $shedule_base += 28;
+                        }
+                        else if($curr == "Thu"){
+                            $shedule_base += 42;
+                        }
+                        else if($curr == "Fri"){
+                            $shedule_base += 56;
+                        }
+
+                        $start_schedule_id = intval(str_replace(" ", "", substr($start_hour, 6, 3))) + $shedule_base;
+                        $end_schedule_id = intval(str_replace(" ", "", substr($end_hour, 6, 3)))  + $shedule_base;
+                        $date=$dt->format('Y-m-d');
+                        for($schedule_id = $start_schedule_id; $schedule_id <= $end_schedule_id; $schedule_id++){
+                            if($curr == $day && $day != "All"){
+                                $sqlInsert = "INSERT INTO `room_schedule` (`id`, `room_id`, `event_name`, `date`, `schedule_id`, `owner_id`, `added_date`)
+                                SELECT NULL, '$room_id', '$event_name', '$date', '$schedule_id', '$owner_id', CURRENT_TIMESTAMP()
+                                FROM DUAL  
+                                WHERE NOT EXISTS (
+                                    SELECT * FROM `room_schedule` 
+                                    WHERE `date` = '$date' AND `schedule_id` = '$schedule_id' AND `id` = '$room_id'
+                                ) 
+                                LIMIT 1";
+                                if($conn->query($sqlInsert) === TRUE) {
+                                    if ($conn->affected_rows > 0) {
+                                        // A row was inserted
+                                        $change_location = true;
+                                    } else {
+                                        // No row was inserted (likely because it already exists)
+                                        $change_location = false;
+                                        echo '
+                                        <script>
+                                            document.getElementById("err_p4").innerHTML = "*Вече е създадена заявка, в която присъстват избраните часове или част от тях";
+                                            document.getElementById("err_p4").style.display = "block";
+                                        </script>
+                                        ';
+                                    }
+                                }
+                                else{
+                                    $change_location = false;
+                                }
+                            }
+                            else if($day == "All"){
+                                $sqlInsert = "INSERT INTO `room_schedule` (`id`, `room_id`, `event_name`, `date`, `schedule_id`, `owner_id`, `added_date`)
+                                SELECT NULL, '$room_id', '$event_name', '$date', '$schedule_id', '$owner_id', CURRENT_TIMESTAMP()
+                                FROM DUAL  
+                                WHERE NOT EXISTS (
+                                    SELECT * FROM `room_schedule` 
+                                    WHERE `date` = '$date' AND `schedule_id` = '$schedule_id' AND `id` = '$room_id'
+                                ) 
+                                LIMIT 1";
+                                if($conn->query($sqlInsert) === TRUE) {
+                                    if ($conn->affected_rows > 0) {
+                                        // A row was inserted
+                                        $change_location = true;
+                                    } else {
+                                        // No row was inserted (likely because it already exists)
+                                        $change_location = false;
+                                        echo '
+                                        <script>
+                                            document.getElementById("err_p4").innerHTML = "*Вече е създадена заявка, в която присъстват избраните часове или част от тях";
+                                            document.getElementById("err_p4").style.display = "block";
+                                        </script>
+                                        ';
+                                    }
+                                }
+                                else{
+                                    $change_location = false;
+                                }
+                            }
+                            else{
+                                echo '
+                                <script>
+                                    document.getElementById("err_p2").innerHTML = "*Грешно въведени данни за времевия период на резервацията";
+                                    document.getElementById("err_p2").style.display = "block";
+                                </script>
+                                ';
+                                $change_location = false;
+                            }
+                        }
+                    }
+                }
+                if($change_location) {
+                    echo "
+                        <script>
+                            window.location.assign('../room_schedule/?room_id=".$room_id."');
+                        </script>
+                    ";
+                }
             }
             if(isset($_POST["submit"])){
+                if($event_name == "" || strlen($event_name) < 8){
+                    echo '
+                    <script>
+                        document.getElementById("err_p1").innerHTML = "*Въведете име на събитието с поне 8 символа";
+                        document.getElementById("err_p1").style.display = "block";
+                    </script>
+                    ';
+                }
                 if(!($date == "" && $day != "" && $start_date != "" && $end_date != "" || $date != "" && $day == "" && $start_date == "" && $end_date == "") || $dateCheck == false){
                     echo '
                     <script>
@@ -307,23 +442,6 @@
                 }
             }
         ?>
-        <br>
-        <p class="admin_page_label">Блокове</p>
-        <br>
-        <div class="block_container">
-            <a href="../rooms/?block=Блок 1" class="block_container_element">Блок 1</a>
-            <a href="../rooms/?block=Блок 2" class="block_container_element">Блок 2</a>
-            <a href="../rooms/?block=Блок 3" class="block_container_element">Блок 3</a>
-            <a href="../rooms/?block=Блок 4" class="block_container_element">Блок 4</a>
-            <a href="../rooms/?block=Блок 5" class="block_container_element">Блок 5</a>
-            <a href="../rooms/?block=Блок 6" class="block_container_element">Блок 6</a>
-            <a href="../rooms/?block=Блок 7" class="block_container_element">Блок 7</a>
-            <a href="../rooms/?block=Блок 8" class="block_container_element">Блок 8</a>
-            <a href="../rooms/?block=Блок 9" class="block_container_element">Блок 9</a>
-            <a href="../rooms/?block=Блок 10" class="block_container_element">Блок 10</a>
-            <a href="../rooms/?block=Блок 11" class="block_container_element">Блок 11</a>
-            <a href="../rooms/?block=Блок 12" class="block_container_element">Блок 12</a>
-        </div>
     </div>
     <?php include "../user_colors.php";?>
 </body>
