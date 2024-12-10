@@ -11,7 +11,15 @@
     $resultUserType = $connMain -> query($sqlSelectUserType);
     $rowUserType = $resultUserType->fetch_assoc();
     $user_type = $rowUserType["type"];
-?>
+?>   <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRZ12WMBL2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-KRZ12WMBL2');
+</script>
 <header class="admin_menu_header" style="margin-top: -23px !important">
     <h2><i class="fa fa-school"></i> Технически университет - гр. София</h2>
     <?php
